@@ -68,8 +68,14 @@ public class StatLangConfig {
      * Replaces %value%, %abs_value%, %percent%, and %stat% placeholders.
      */
     public String getFormattedStat(String statId, ReforgeStatData data) {
-        String formatType = determineFormatType(data);
-        
+        double val = data.value();
+        // Adjust value for SCALE type: 1.1 -> +0.1 (+10%), 0.9 -> -0.1 (-10%)
+        if (data.type() == ReforgeStatType.SCALE) {
+            val = val - 1.0;
+        }
+
+        String formatType = determineFormatType(data.type(), val);
+
         // Try precise stat ID first, fallback to DEFAULT
         Map<String, String> formats = statFormats.getOrDefault(statId.toUpperCase(), statFormats.get("DEFAULT"));
         if (formats == null) {
@@ -88,7 +94,6 @@ public class StatLangConfig {
             }
         }
 
-        double val = data.value();
         String absValueStr = formatDouble(Math.abs(val));
         String valueStr = formatDouble(val);
         String percentStr = formatDouble(Math.abs(val) * 100);
@@ -100,11 +105,11 @@ public class StatLangConfig {
                 .replace("%stat%", statId);
     }
 
-    private String determineFormatType(ReforgeStatData data) {
-        if (data.type() == ReforgeStatType.FLAT) {
-            return data.value() < 0 ? "FLAT_NEGATIVE" : "FLAT";
+    private String determineFormatType(ReforgeStatType type, double value) {
+        if (type == ReforgeStatType.FLAT) {
+            return value < 0 ? "FLAT_NEGATIVE" : "FLAT";
         } else {
-            return data.value() < 0 ? "SCALE_NEGATIVE" : "SCALE";
+            return value < 0 ? "SCALE_NEGATIVE" : "SCALE";
         }
     }
 

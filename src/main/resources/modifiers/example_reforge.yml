@@ -6,3 +6,11 @@ stats:
     #Available types: FLAT, SCALE
     Type: FLAT
     Value: 1.5
+
+  # SCALE example: multiply the item's base PLAYER_DAMAGE by 0.9 (-10%).
+  # If the item has NO base PLAYER_DAMAGE stat (base = 0), the optional Fallback
+  # value is applied as a flat bonus instead. Without Fallback the stat is skipped.
+  #PLAYER_DAMAGE:
+  #  Type: SCALE
+  #  Value: 0.9        # -10% of base PLAYER_DAMAGE
+  #  Fallback: -5.0    # flat -5 when the item has no base PLAYER_DAMAGE

@@ -1,0 +1,20 @@
+# MMOItems type of the item that can get this reforge
+type:
+  - SWORD
+
+# List of possible reforges for this item type and their weight
+reforges:
+  'example_reforge': 10
+  'savage': 35
+  'agile': 25
+  'sturdy': 30
+
+# (Optional) Override the weight shown in the GUI modifier list and its sort order.
+# Does NOT affect actual roll chances — those always use 'reforges' above.
+# Useful when you want rare modifiers (low weight) to appear prominently in the list.
+# Any modifier not listed here falls back to its value from 'reforges'.
+#display_weights:
+#  'example_reforge': 5   # appears first (lowest display weight = top of list)
+#  'savage': 30
+#  'agile': 20
+#  'sturdy': 25

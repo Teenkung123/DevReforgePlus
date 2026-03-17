@@ -48,12 +48,64 @@ public final class MessageUtils {
      */
     public static Component parse(String text) {
         if (text == null || text.isEmpty()) return Component.empty();
-        // Step 1 – translate & codes to §, honouring && as a literal &
-        String translated = LegacyComponentSerializer.legacyAmpersand().serialize(
-                LegacyComponentSerializer.legacyAmpersand().deserialize(text)
-        );
-        // Step 2 – pass the § form through MiniMessage so <tag> syntax also resolves
-        return MM.deserialize(translated);
+        // Translate & codes to MiniMessage tags first, then let MiniMessage handle <tags>
+        return MM.deserialize(translateLegacy(text));
+    }
+
+    /**
+     * Translates {@code &x} legacy colour/format codes to their MiniMessage
+     * {@code <tag>} equivalents so that the result can be passed directly to
+     * {@link MiniMessage#deserialize(String)}.
+     * <ul>
+     *   <li>{@code &&} is preserved as a literal {@code &} character.</li>
+     *   <li>Unknown {@code &X} sequences are left unchanged.</li>
+     * </ul>
+     */
+    static String translateLegacy(String text) {
+        if (text == null || text.isEmpty()) return text;
+        StringBuilder sb = new StringBuilder(text.length() + 16);
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '&' && i + 1 < text.length()) {
+                String tag = legacyCharToTag(text.charAt(i + 1));
+                if (tag != null) {
+                    sb.append(tag);
+                    i++; // consume the code character
+                    continue;
+                }
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    private static String legacyCharToTag(char code) {
+        return switch (Character.toLowerCase(code)) {
+            case '0' -> "<black>";
+            case '1' -> "<dark_blue>";
+            case '2' -> "<dark_green>";
+            case '3' -> "<dark_aqua>";
+            case '4' -> "<dark_red>";
+            case '5' -> "<dark_purple>";
+            case '6' -> "<gold>";
+            case '7' -> "<gray>";
+            case '8' -> "<dark_gray>";
+            case '9' -> "<blue>";
+            case 'a' -> "<green>";
+            case 'b' -> "<aqua>";
+            case 'c' -> "<red>";
+            case 'd' -> "<light_purple>";
+            case 'e' -> "<yellow>";
+            case 'f' -> "<white>";
+            case 'k' -> "<obfuscated>";
+            case 'l' -> "<bold>";
+            case 'm' -> "<strikethrough>";
+            case 'n' -> "<underlined>";
+            case 'o' -> "<italic>";
+            case 'r' -> "<reset>";
+            case '&' -> "&"; // escaped ampersand → literal &
+            default  -> null; // unknown code — leave the & in place
+        };
     }
 
     /**

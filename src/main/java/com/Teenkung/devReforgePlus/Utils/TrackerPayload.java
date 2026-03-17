@@ -1,4 +1,7 @@
 package com.Teenkung.devReforgePlus.Utils;
 
-public class Pair {
+import java.util.List;
+
+public record TrackerPayload(String modifier, Integer attempt, List<String> appliedStats) {
+
 }

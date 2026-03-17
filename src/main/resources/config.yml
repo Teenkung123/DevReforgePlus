@@ -1,0 +1,173 @@
+Economy:
+  Base: 10000
+  Multiplier: 1.25
+  Max: 1000000
+  Rounding: true
+
+# How the reforge modifier is displayed in the item's lore
+ReforgeDisplay:
+  Prefix: '&7[<reforge>&7] '
+  # The header line added to the lore. Placeholders: <reforge_display>
+  LoreLine: '<white>ヸ โบนัสการตีบวก: <white><reforge_display>'
+  Stats:
+    # How each stat line is formatted. Placeholders: <stat_format>
+    Format: '<white>    <stat_format>'
+
+# Reforge delay in seconds (e.g. 0.1 = 100ms). Prevents spam-clicking the reforge button.
+ReforgeDelay: 0.1
+
+GUI:
+  Reforge:
+    Title: Reforge Menu
+    Layout:
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+    Items:
+      B:
+        Material: BLACK_STAINED_GLASS_PANE
+        DisplayName: ''
+        Lore: []
+        ModelData: 0
+    Options:
+      InputSlot: 22
+      ReforgeButton:
+        Slot: 31
+        # Shown when a valid item is in the input slot and can be reforged
+        # Available placeholders: <cost> (next reforge cost)
+        ItemValid:
+          Material: DIAMOND_PICKAXE
+          DisplayName: '&aReforge'
+          Lore:
+            - '&7Click to reforge the item.'
+            - '&7Cost: &e<cost>'
+          ModelData: 0
+        # Shown when the item type has no reforge config or is not an MMOItem
+        ItemInvalid:
+          Material: BARRIER
+          DisplayName: '&cCannot Reforge'
+          Lore:
+            - '&7This item type is not supported.'
+        # Shown when no item is placed in the input slot
+        ItemEmpty:
+          Material: KELP
+          DisplayName: '&cNo Item'
+          Lore:
+            - '&7Place an item in the input slot.'
+        # Shown when the player cannot afford the reforge cost
+        ItemNotEnoughMoney:
+          Material: GOLD_INGOT
+          DisplayName: '&cNot Enough Money'
+          Lore:
+            - '&7You cannot afford this reforge.'
+            - '&7Reforge Cost: &e<cost>'
+      ModifierInfo:
+        Slot: 24
+        # Shown when the item already has a reforge modifier applied.
+        # Available placeholders: <modifier_id>, <modifier_display>, <attempts>
+        # <stats> expands to the modifier's stat lines (uses ReforgeDisplay format)
+        ItemValid:
+          Material: PAPER
+          DisplayName: '&aCurrent Modifier'
+          Lore:
+            - '&7Modifier: &f<modifier_display>'
+            - '&7ID: &8<modifier_id>'
+            - '&7Reforge count: &e<attempts>'
+            - '<stats>'
+          ModelData: 0
+        ItemNotReforgeBefore:
+          Material: PAPER
+          DisplayName: '&cNot Reforged Before'
+          Lore:
+            - '&7This item has not been reforged before.'
+            - '&7Reforge the item to get the information about the modifier.'
+        # Shown when the item is valid but has not been reforged yet (no modifier)
+        ItemInvalid:
+          Material: BARRIER
+          DisplayName: '&cNo Modifier'
+          Lore:
+            - '&7This item has not been reforged yet.'
+        # Shown when no item is placed in the input slot
+        ItemEmpty:
+          Material: KELP
+          DisplayName: '&cNo Item'
+          Lore:
+            - '&7Place an item to see its modifier.'
+      ModifierList:
+        Slot: 20
+        # Shown when the item is valid and modifiers are configured for its type
+        ItemValid:
+          Material: PAPER
+          DisplayName: '&aPossible Modifiers'
+          Lore:
+            - '&7Modifiers for this item type:'
+            - '<entries>'
+          ModelData: 0
+          # Template for each modifier entry in the list.
+          # Placeholders: <modifier_display>, <modifier_id>, <weight>, <percent>
+          ListLore: '&8- &f<modifier_display> &7(<weight> | <percent>%)'
+          # How many modifier entries to show per page before the "more" line appears.
+          EntriesPerPage: 10
+          # Message shown as the last lore line when more entries exist on the next page.
+          # Placeholder: <count> (number of remaining entries)
+          # Click the item to cycle to the next page.
+          MoreMessage: '&8  And <count> more...'
+        # Shown when the item type has no modifiers configured
+        ItemInvalid:
+          Material: BARRIER
+          DisplayName: '&cNo Modifiers'
+          Lore:
+            - '&7No modifiers are configured'
+            - '&7for this item type.'
+        # Shown when no item is placed in the input slot
+        ItemEmpty:
+          Material: KELP
+          DisplayName: '&cNo Item'
+          Lore:
+            - '&7Place an item to see modifiers.'
+
+  Catalyst:
+    Title: Catalyst Menu
+    Layout:
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+      - "BBBBBBBBB"
+    Items:
+      B:
+        Material: BLACK_STAINED_GLASS_PANE
+        DisplayName: ''
+        Lore: []
+        ModelData: 0
+    Options: {}
+
+Sounds:
+  # Format: <sound_name>:<volume>:<pitch>
+  # Volume and pitch are optional. If omitted, they default to 1.0
+  ReforgeComplete: minecraft:block.anvil.use:1.0:1.0
+  ReforgeFailed: minecraft:block.anvil.break:1.0:1.0
+
+Messages:
+  # Command messages
+  NoPermission: '&cYou don''t have permission to do this.'
+  PlayersOnly: '&cThis command can only be run by a player.'
+  OpenGUINoPermission: '&cYou don''t have permission to use this command.'
+  OpenGUIPlayersOnly: '&cOnly players can open the reforge GUI.'
+  HoldItem: '&cYou must be holding an item.'
+  ReloadSuccess: '&a[DevReforgePlus] Configurations reloaded successfully.'
+  NoReforgeModifier: '&cThis item has no reforge modifier.'
+  RemoveSuccess: '&aReforge modifier removed from the item.'
+  ResetSuccess: '&aReforge attempt count reset to 0.'
+  ResetFailed: '&cFailed to reset attempt count: &f<error>'
+  ReforgeUsage: '&cUsage: /devreforge reforge <reforge_id>'
+  UnknownModifier: '&cUnknown modifier: &f<modifier_id>'
+  NotMMOItem: '&cThis item is not an MMOItem.'
+  ReforgeSuccess: '&aApplied reforge modifier &f<modifier_id> &ato the item.'
+  UnknownSubCommand: '&cUnknown sub-command. Use: &freload&c, &fremove&c, &freset&c, &freforge <id>'
+  UnknownReforge: '&cUnknown Reforge: &f<reforge_id>'
+  NotEnoughMoney: '&cYou cannot afford this reforge. Cost: &e<cost>'

@@ -12,10 +12,23 @@ repositories {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
     }
+    maven {
+        name = 'phoenix'
+        url = 'https://nexus.phoenixdevt.fr/repository/maven-public/'
+    }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
+    compileOnly('io.lumine:MythicLib-dist:1.6.2-SNAPSHOT')
+    compileOnly('net.Indyuce:MMOItems-API:6.10.1-SNAPSHOT')
+    compileOnly('com.github.MilkBowl:VaultAPI:1.7') {
+        exclude module: 'bukkit'
+    }
+
+    compileOnly("org.projectlombok:lombok:1.18.44")
+    annotationProcessor("org.projectlombok:lombok:1.18.44")
 }
 
 tasks {

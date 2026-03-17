@@ -2,3 +2,8 @@ name: DevReforgePlus
 version: '1.0-SNAPSHOT'
 main: com.Teenkung.devReforgePlus.DevReforgePlus
 api-version: '1.21'
+depend: [ Vault, MMOItems ]
+commands:
+  "devreforge":
+    description: "DevReforgePlus Command"
+    permission: "devreforge.use"
