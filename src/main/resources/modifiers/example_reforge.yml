@@ -1,0 +1,8 @@
+id: example_reforge
+displayName: Example
+
+stats:
+  ATTACK_DAMAGE:
+    #Available types: FLAT, SCALE
+    Type: FLAT
+    Value: 1.5

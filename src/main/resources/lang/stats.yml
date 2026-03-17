@@ -1,0 +1,149 @@
+stats:
+  DEFAULT:
+    FLAT: '<#00FF00>+%value% <gray>%stat%'
+    FLAT_NEGATIVE: '<#FF0000>-%abs_value% <gray>%stat%'
+    SCALE: '<#00FF00>+%percent%% <gray>%stat%'
+    SCALE_NEGATIVE: '<#FF0000>-%abs_value%% <gray>%stat%'
+  DEFENSE:
+    FLAT: '<white>พลังป้องกัน: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>พลังป้องกัน: <#FF0000>-%abs_value%'
+    SCALE: '<white>พลังป้องกัน: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังป้องกัน: <#FF0000>-%abs_value%%'
+  WEAPON_DAMAGE:
+    FLAT: '<white>ดาเมจอาวุธ: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>ดาเมจอาวุธ: <#FF0000>-%abs_value%%'
+  ATTACK_SPEED:
+    FLAT: '<white>ความเร็วโจมตี: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ความเร็วโจมตี: <#FF0000>-%abs_value%'
+    SCALE: '<white>ความเร็วโจมตี: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ความเร็วโจมตี: <#FF0000>-%abs_value%%'
+  MAX_MANA:
+    FLAT: '<white>มานาสูงสุด: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>มานาสูงสุด: <#FF0000>-%abs_value%'
+    SCALE: '<white>มานาสูงสุด: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>มานาสูงสุด: <#FF0000>-%abs_value%%'
+  ATTACK_DAMAGE:
+    FLAT: '<white>พลังโจมตี: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>พลังโจมตี: <#FF0000>-%abs_value%'
+    SCALE: '<white>พลังโจมตี: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังโจมตี: <#FF0000>-%abs_value%%'
+  CRITICAL_STRIKE_CHANCE:
+    FLAT: '<white>โอกาสคริติคอล: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>โอกาสคริติคอล: <#FF0000>-%abs_value%%'
+    SCALE: '<white>โอกาสคริติคอล: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>โอกาสคริติคอล: <#FF0000>-%abs_value%%'
+  CRITICAL_STRIKE_POWER:
+    FLAT: '<white>ดาเมจคริติคอล: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>ดาเมจคริติคอล: <#FF0000>-%abs_value%%'
+    SCALE: '<white>ดาเมจคริติคอล: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ดาเมจคริติคอล: <#FF0000>-%abs_value%%'
+  ENTITY_INTERACTION_RANGE:
+    FLAT: '<white>ระยะการต่อสู้: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ระยะการต่อสู้: <#FF0000>-%abs_value%'
+    SCALE: '<white>ระยะการต่อสู้: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ระยะการต่อสู้: <#FF0000>-%abs_value%%'
+  BLOCK_INTERACTION_RANGE:
+    FLAT: '<white>ระยะการจับต้อง: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ระยะการจับต้อง: <#FF0000>-%abs_value%'
+    SCALE: '<white>ระยะการจับต้อง: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ระยะการจับต้อง: <#FF0000>-%abs_value%%'
+  BLOCK_POWER:
+    FLAT: '<white>พลังการบล๊อคการโจมตี: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>พลังการบล๊อคการโจมตี: <#FF0000>-%abs_value%'
+    SCALE: '<white>พลังการบล๊อคการโจมตี: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังการบล๊อคการโจมตี: <#FF0000>-%abs_value%%'
+  BLOCK_RATING:
+    FLAT: '<white>โอกาสการบล๊อคการโจมตี: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>โอกาสการบล๊อคการโจมตี: <#FF0000>-%abs_value%%'
+    SCALE: '<white>โอกาสการบล๊อคการโจมตี: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>โอกาสการบล๊อคการโจมตี: <#FF0000>-%abs_value%%'
+  DODGE_RATING:
+    FLAT: '<white>โอกาสการหลบหลีก: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>โอกาสการหลบหลีก: <#FF0000>-%abs_value%%'
+    SCALE: '<white>โอกาสการหลบหลีก: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>โอกาสการหลบหลีก: <#FF0000>-%abs_value%%'
+  DODGE_COOLDOWN_REDUCTION:
+    FLAT: '<white>ลดคูลดาวน์การหลบหลีก: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>ลดคูลดาวน์การหลบหลีก: <#FF0000>-%abs_value%%'
+    SCALE: '<white>ลดคูลดาวน์การหลบหลีก: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ลดคูลดาวน์การหลบหลีก: <#FF0000>-%abs_value%%'
+  PVE_DAMAGE:
+    FLAT: '<white>พลังโจมตีมอนสเตอร์: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>พลังโจมตีมอนสเตอร์: <#FF0000>-%abs_value%%'
+    SCALE: '<white>พลังโจมตีมอนสเตอร์: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังโจมตีมอนสเตอร์: <#FF0000>-%abs_value%%'
+  PVP_DAMAGE:
+    FLAT: '<white>พลังโจมตีผู้เล่น: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>พลังโจมตีผู้เล่น: <#FF0000>-%abs_value%%'
+    SCALE: '<white>พลังโจมตีผู้เล่น: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังโจมตีผู้เล่น: <#FF0000>-%abs_value%%'
+  MAX_HEALTH:
+    FLAT: '<white>พลังชีวิตสูงสุด: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>พลังชีวิตสูงสุด: <#FF0000>-%abs_value%'
+    SCALE: '<white>พลังชีวิตสูงสุด: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังชีวิตสูงสุด: <#FF0000>-%abs_value%%'
+  SKILL_DAMAGE:
+    FLAT: '<white>พลังโจมตีสกิล: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>พลังโจมตีสกิล: <#FF0000>-%abs_value%%'
+    SCALE: '<white>พลังโจมตีสกิล: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังโจมตีสกิล: <#FF0000>-%abs_value%%'
+  DAMAGE_REDUCTION:
+    FLAT: '<white>ลดดาเมจที่ได้รับ: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>ลดดาเมจที่ได้รับ: <#FF0000>-%abs_value%%'
+    SCALE: '<white>ลดดาเมจที่ได้รับ: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ลดดาเมจที่ได้รับ: <#FF0000>-%abs_value%%'
+  FALL_DAMGE_REDUCTION:
+    FLAT: '<white>ลดดาเมจจากการตก: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>ลดดาเมจจากการตก: <#FF0000>-%abs_value%%'
+    SCALE: '<white>ลดดาเมจจากการตก: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ลดดาเมจจากการตก: <#FF0000>-%abs_value%%'
+  KNOCKBACK_RESISTANCE:
+    FLAT: '<white>ต้านทานการดีดกลับ: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>ต้านทานการดีดกลับ: <#FF0000>-%abs_value%%'
+    SCALE: '<white>ต้านทานการดีดกลับ: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ต้านทานการดีดกลับ: <#FF0000>-%abs_value%%'
+  JUMP_STRENGTH:
+    FLAT: '<white>พลังการกระโดด: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>พลังการกระโดด: <#FF0000>-%abs_value%%'
+    SCALE: '<white>พลังการกระโดด: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังการกระโดด: <#FF0000>-%abs_value%%'
+  SAFE_FALL_DISTANCE:
+    FLAT: '<white>ระยะตกไม่เป็นไร: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ระยะตกไม่เป็นไร: <#FF0000>-%abs_value%'
+    SCALE: '<white>ระยะตกไม่เป็นไร: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ระยะตกไม่เป็นไร: <#FF0000>-%abs_value%%'
+  STEP_HEIGHT:
+    FLAT: '<white>ความสูงการก้าวขึ้น: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ความสูงการก้าวขึ้น: <#FF0000>-%abs_value%'
+    SCALE: '<white>ความสูงการก้าวขึ้น: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ความสูงการก้าวขึ้น: <#FF0000>-%abs_value%%'
+  BONUS_OXYGEN:
+    FLAT: '<white>เพิ่มออกซิเจนเวลาดำน้ำ: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>เพิ่มออกซิเจนเวลาดำน้ำ: <#FF0000>-%abs_value%'
+    SCALE: '<white>เพิ่มออกซิเจนเวลาดำน้ำ: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>เพิ่มออกซิเจนเวลาดำน้ำ: <#FF0000>-%abs_value%%'
+  HEALTH_REGENERATION:
+    FLAT: '<white>ฟื้นฟูพลังชีวิต: <#00FF00>+%value% ต่อวินาที'
+    FLAT_NEGATIVE: '<white>ฟื้นฟูพลังชีวิต: <#FF0000>-%abs_value% ต่อวินาที'
+    SCALE: '<white>ฟื้นฟูพลังชีวิต: <#00FF00>+%percent%% ต่อวินาที'
+    SCALE_NEGATIVE: '<white>ฟื้นฟูพลังชีวิต: <#FF0000>-%abs_value%% ต่อวินาที'
+  MANA_REGENERATION:
+    FLAT: '<white>ฟื้นฟูมานา: <#00FF00>+%value% ต่อวินาที'
+    FLAT_NEGATIVE: '<white>ฟื้นฟูมานา: <#FF0000>-%abs_value% ต่อวินาที'
+    SCALE: '<white>ฟื้นฟูมานา: <#00FF00>+%percent%% ต่อวินาที'
+    SCALE_NEGATIVE: '<white>ฟื้นฟูมานา: <#FF0000>-%abs_value%% ต่อวินาที'
+  ARROW_VELOCITY:
+    FLAT: '<white>ความเร็วลูกธนู: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ความเร็วลูกธนู: <#FF0000>-%abs_value%'
+    SCALE: '<white>ความเร็วลูกธนู: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ความเร็วลูกธนู: <#FF0000>-%abs_value%%'
+  PROJECTILE_DAMAGE:
+    FLAT: '<white>พลังโจมตีธนู: <#00FF00>+%value%%'
+    FLAT_NEGATIVE: '<white>พลังโจมตีธนู: <#FF0000>-%abs_value%%'
+    SCALE: '<white>พลังโจมตีธนู: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>พลังโจมตีธนู: <#FF0000>-%abs_value%%'
+  MAX_DURABILITY:
+    FLAT: '<white>ความทนทานสูงสุด: <#00FF00>+%value%'
+    FLAT_NEGATIVE: '<white>ความทนทานสูงสุด: <#FF0000>-%abs_value%'
+    SCALE: '<white>ความทนทานสูงสุด: <#00FF00>+%percent%%'
+    SCALE_NEGATIVE: '<white>ความทนทานสูงสุด: <#FF0000>-%abs_value%%'
