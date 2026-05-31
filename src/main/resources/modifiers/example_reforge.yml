@@ -1,6 +1,17 @@
 id: example_reforge
 displayName: Example
 
+# A modifier can belong to one or more groups (tiers).
+# Groups are used by GUARANTEED_GROUP catalyst actions to filter modifier selection.
+#
+# Single group (shorthand):
+# group: rare
+#
+# Multiple groups — this modifier will match any of the listed groups:
+groups:
+  - example
+  - rare
+
 stats:
   ATTACK_DAMAGE:
     #Available types: FLAT, SCALE

@@ -1,5 +1,6 @@
 package com.Teenkung.devReforgePlus.Config;
 
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystConfig;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.ModifierConfig;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.StatLangConfig;
 import com.Teenkung.devReforgePlus.Config.TypeConfig.TypeConfig;
@@ -25,7 +26,11 @@ public class ConfigLoader {
     @Getter
     private StatLangConfig statLangConfig;
     @Getter
+    private CatalystConfig catalystConfig;
+    @Getter
     private FileConfiguration config;
+    @Getter
+    private boolean loggingEnabled;
 
     @Getter
     public double basePrice;
@@ -56,10 +61,12 @@ public class ConfigLoader {
         statLangConfig = new StatLangConfig(plugin);
         modifierConfig = new ModifierConfig(plugin);
         typeConfig = new TypeConfig(plugin);
+        catalystConfig = new CatalystConfig(plugin);
         basePrice      = config.getDouble("Economy.Base", 10000);
         priceScaling   = config.getDouble("Economy.Multiplier", 1.25);
         maxPrice       = config.getDouble("Economy.Max", 1000000);
         roundingEnabled = config.getBoolean("Economy.Rounding", true);
+        loggingEnabled = config.getBoolean("Logging.Enabled", true);
     }
 
     public double getCostAtAttempt(int attempt) {

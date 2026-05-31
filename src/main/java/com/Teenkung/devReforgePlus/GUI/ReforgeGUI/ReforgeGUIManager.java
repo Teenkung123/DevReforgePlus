@@ -4,46 +4,32 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 public class ReforgeGUIManager {
 
-    private static final List<ReforgeGUI> inventory = new ArrayList<>();
+    private static final IdentityHashMap<Inventory, ReforgeGUI> guiMap = new IdentityHashMap<>();
 
-    protected static void addGUI(ReforgeGUI gui) {
-        inventory.add(gui);
-    }
-
-    protected static void removeGUI(ReforgeGUI gui) {
-        inventory.remove(gui);
+    protected static void addGUI(Inventory inv, ReforgeGUI gui) {
+        guiMap.put(inv, gui);
     }
 
     protected static void removeGUI(Inventory inv) {
-        inventory.removeIf(gui -> gui.getInventory().equals(inv));
+        guiMap.remove(inv);
     }
 
     public static boolean isReforgeGUI(Inventory inv) {
-        for (ReforgeGUI gui : inventory) {
-            if (gui.getInventory().equals(inv)) {
-                return true;
-            }
-        }
-        return false;
+        return guiMap.containsKey(inv);
     }
 
     public static ReforgeGUI getReforgeGUI(Inventory inv) {
-        for (ReforgeGUI gui : inventory) {
-            if (gui.getInventory().equals(inv)) {
-                return gui;
-            }
-        }
-        return null;
+        return guiMap.get(inv);
     }
 
     public static void closeAll() {
-        // Copy the list to prevent ConcurrentModificationException when InventoryCloseEvent triggers removeGUI()
-        for (ReforgeGUI gui : new ArrayList<>(inventory)) {
-            new ArrayList<>(gui.getInventory().getViewers()).forEach(HumanEntity::closeInventory);
+        for (Map.Entry<Inventory, ReforgeGUI> entry : new ArrayList<>(guiMap.entrySet())) {
+            new ArrayList<>(entry.getKey().getViewers()).forEach(HumanEntity::closeInventory);
         }
     }
 

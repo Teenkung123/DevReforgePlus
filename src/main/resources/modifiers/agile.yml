@@ -1,0 +1,12 @@
+id: agile
+displayName: <aqua>Agile
+stats:
+  ATTACK_SPEED:
+    Type: SCALE
+    Value: 0.15
+  DODGE_RATING:
+    Type: FLAT
+    Value: 5.0
+  DODGE_COOLDOWN_REDUCTION:
+    Type: SCALE
+    Value: 0.05

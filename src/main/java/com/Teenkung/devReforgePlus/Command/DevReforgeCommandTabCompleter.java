@@ -18,7 +18,9 @@ public class DevReforgeCommandTabCompleter implements TabCompleter {
         this.plugin = plugin;
     }
 
-    private static final List<String> ADMIN_SUBS = List.of("reload", "remove", "reset", "reforge");
+    private static final List<String> ADMIN_SUBS = List.of(
+            "reload", "remove", "reset", "reforge", "updateall", "updateitem",
+            "listgroups", "listcatalysts");
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
@@ -33,13 +35,33 @@ public class DevReforgeCommandTabCompleter implements TabCompleter {
             return out;
         }
 
-        if (args.length == 2 && args[0].equalsIgnoreCase("reforge")) {
+        if (args.length == 2) {
+            String sub = args[0].toLowerCase();
             String typed = args[1].toLowerCase();
             List<String> out = new ArrayList<>();
-            plugin.getConfigLoader().getModifierConfig().getModifiers().keySet().stream()
-                    .filter(id -> id.toLowerCase().startsWith(typed))
-                    .forEach(out::add);
-            return out;
+
+            if (sub.equals("reforge")) {
+                plugin.getConfigLoader().getModifierConfig().getModifiers().keySet().stream()
+                        .filter(id -> id.toLowerCase().startsWith(typed))
+                        .forEach(out::add);
+                return out;
+            }
+
+            if (sub.equals("listgroups")) {
+                plugin.getConfigLoader().getModifierConfig().getAllGroups().stream()
+                        .filter(g -> g.startsWith(typed))
+                        .sorted()
+                        .forEach(out::add);
+                return out;
+            }
+
+            if (sub.equals("listcatalysts")) {
+                plugin.getConfigLoader().getCatalystConfig().getCatalysts().keySet().stream()
+                        .filter(id -> id.toLowerCase().startsWith(typed))
+                        .sorted()
+                        .forEach(out::add);
+                return out;
+            }
         }
 
         return List.of();

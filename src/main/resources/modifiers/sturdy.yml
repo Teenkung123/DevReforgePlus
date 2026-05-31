@@ -1,0 +1,12 @@
+id: sturdy
+displayName: <dark_green>Sturdy
+stats:
+  MAX_HEALTH:
+    Type: FLAT
+    Value: 100.0
+  DEFENSE:
+    Type: SCALE
+    Value: 0.20
+  DAMAGE_REDUCTION:
+    Type: FLAT
+    Value: 3.5

@@ -1,5 +1,8 @@
 package com.Teenkung.devReforgePlus.GUI.ReforgeGUI;
 
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystAction;
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystActionType;
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystData;
 import com.Teenkung.devReforgePlus.Config.ConfigLoader;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.ModifierData;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.ReforgeStatData;
@@ -10,6 +13,7 @@ import com.Teenkung.devReforgePlus.Utils.ItemBuilder;
 import com.Teenkung.devReforgePlus.Utils.MessageUtils;
 import com.Teenkung.devReforgePlus.Utils.TrackerPayload;
 import com.Teenkung.devReforgePlus.Utils.TrackerUtils;
+import org.jetbrains.annotations.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import net.Indyuce.mmoitems.api.Type;
@@ -47,12 +51,18 @@ public class ReforgeGUI extends GUIBuilder {
     @Getter @Setter private int modifierInfoSlot;
     @Getter private Map<String, ItemBuilder> modifierInfoItems = new HashMap<>();
 
+    /** Slot where the player physically places their catalyst item (stored as a real item, never overwritten by GUI code). */
+    @Getter @Setter private int catalystInputSlot;
+    /** Display-only slot that shows current catalyst status (like modifierInfoSlot). Never stores real items. */
+    @Getter @Setter private int catalystInfoSlot;
+    @Getter private Map<String, ItemBuilder> catalystInfoItems = new HashMap<>();
+
     @Getter private Inventory inventory;
     /** The player who currently has this GUI open. */
     private Player player;
 
-    /** Tracks when each player last pressed the reforge button (epoch ms). */
-    private final Map<UUID, Long> cooldownMap = new HashMap<>();
+    /** Tracks when each player last pressed the reforge button (epoch ms). Shared across all sessions. */
+    private static final Map<UUID, Long> cooldownMap = new HashMap<>();
 
 
     // -------------------------------------------------------------------------
@@ -62,7 +72,22 @@ public class ReforgeGUI extends GUIBuilder {
     public ReforgeGUI() {
         super();
         DevReforgePlus.getInstance().getLogger().info("Loading Reforge GUI...");
-        Bukkit.getPluginManager().registerEvents(new ReforgeGUIListener(), DevReforgePlus.getInstance());
+    }
+
+    /** Creates a per-session copy from the template, sharing config references. */
+    ReforgeGUI(ReforgeGUI template) {
+        super();
+        this.setOptions(template.getOptions());
+        this.inputSlot = template.inputSlot;
+        this.reforgeButtonSlot = template.reforgeButtonSlot;
+        this.modifierListSlot = template.modifierListSlot;
+        this.modifierInfoSlot = template.modifierInfoSlot;
+        this.catalystInputSlot = template.catalystInputSlot;
+        this.catalystInfoSlot = template.catalystInfoSlot;
+        this.reforgeButtonItems = template.reforgeButtonItems;
+        this.modifierListItems = template.modifierListItems;
+        this.modifierInfoItems = template.modifierInfoItems;
+        this.catalystInfoItems = template.catalystInfoItems;
     }
 
     public void loadReforgeMenu() {
@@ -74,40 +99,50 @@ public class ReforgeGUI extends GUIBuilder {
         }
         this.loadFrom(config);
 
-        this.inputSlot        = getOptions().getInt("InputSlot", 22);
+        this.inputSlot         = getOptions().getInt("InputSlot", 22);
         this.reforgeButtonSlot = getOptions().getInt("ReforgeButton.Slot", 31);
-        this.modifierListSlot = getOptions().getInt("ModifierList.Slot", 20);
-        this.modifierInfoSlot = getOptions().getInt("ModifierInfo.Slot", 24);
+        this.modifierListSlot  = getOptions().getInt("ModifierList.Slot", 20);
+        this.modifierInfoSlot  = getOptions().getInt("ModifierInfo.Slot", 24);
+        this.catalystInputSlot = getOptions().getInt("CatalystInputSlot", 26);
+        this.catalystInfoSlot  = getOptions().getInt("CatalystInfo.Slot", 25);
 
         loadItemStates("ReforgeButton", reforgeButtonItems);
         loadItemStates("ModifierList",  modifierListItems);
         loadItemStates("ModifierInfo",  modifierInfoItems);
+        loadItemStates("CatalystInfo",  catalystInfoItems);
     }
 
     private void loadItemStates(String optionPath, Map<String, ItemBuilder> targetMap) {
         ConfigurationSection section = getOptions().getConfigurationSection(optionPath);
         if (section == null) return;
         for (String key : section.getKeys(false)) {
-        if (key.equals("Slot") || key.equals("ListLore") || key.equals("MaxEntries")
-                || key.equals("EntriesPerPage") || key.equals("MoreMessage")) continue;
+            if (key.equals("Slot") || key.equals("ListLore") || key.equals("MaxEntries")
+                    || key.equals("EntriesPerPage") || key.equals("MoreMessage")) continue;
             ConfigurationSection stateSection = section.getConfigurationSection(key);
             if (stateSection != null) targetMap.put(key, new ItemBuilder(stateSection));
         }
     }
 
     public void open(Player player) {
-        this.player = player;
-        this.inventory = this.build();
-        ReforgeGUIManager.addGUI(this);
+        ReforgeGUI session = new ReforgeGUI(this);
+        session.player = player;
+        session.inventory = this.build();
 
-        clearInputSlot();
-        updateDisplay();
+        ReforgeGUIManager.addGUI(session.inventory, session);
 
-        player.openInventory(this.inventory);
+        session.clearInputSlot();
+        session.clearCatalystInputSlot();
+        session.updateDisplay();
+
+        player.openInventory(session.inventory);
     }
 
     private void clearInputSlot() {
         this.inventory.setItem(inputSlot, null);
+    }
+
+    private void clearCatalystInputSlot() {
+        this.inventory.setItem(catalystInputSlot, null);
     }
 
     // -------------------------------------------------------------------------
@@ -118,12 +153,62 @@ public class ReforgeGUI extends GUIBuilder {
         updateReforgeButton();
         updateModifierList();
         updateModifierInfo();
+        updateCatalystSlot();
     }
 
     /** Advances the modifier list to the next page, wrapping back to 0 after the last page. */
     public void nextModifierListPage() {
         modifierListPage = (modifierListPage + 1) % modifierListTotalPages;
         updateModifierList();
+    }
+
+    /**
+     * Updates the catalyst INFO slot (display only). Never touches the catalyst INPUT slot.
+     * Reads the item from catalystInputSlot, writes a display item to catalystInfoSlot.
+     */
+    private void updateCatalystSlot() {
+        ItemStack catalystItem = getCatalystItem();
+        if (catalystItem == null || catalystItem.getType().isAir()) {
+            ItemBuilder b = catalystInfoItems.get("ItemEmpty");
+            if (b != null) this.inventory.setItem(catalystInfoSlot, b.build());
+            return;
+        }
+        CatalystData catalyst = getCurrentCatalyst();
+        if (catalyst == null) {
+            ItemBuilder b = catalystInfoItems.get("ItemInvalid");
+            if (b != null) this.inventory.setItem(catalystInfoSlot, b.build());
+            return;
+        }
+        ItemBuilder b = catalystInfoItems.get("ItemValid");
+        if (b == null) return;
+        Map<String, String> scalars = Map.of("catalyst_display", catalyst.displayName());
+        Map<String, List<String>> multi = Map.of("actions", buildCatalystActionLines(catalyst));
+        this.inventory.setItem(catalystInfoSlot, b.build(scalars, multi));
+    }
+
+    /** Returns the actual item placed in the catalyst INPUT slot, or null if empty. */
+    public @Nullable ItemStack getCatalystItem() {
+        return this.inventory.getItem(catalystInputSlot);
+    }
+
+    public @Nullable CatalystData getCurrentCatalyst() {
+        return DevReforgePlus.getInstance().getConfigLoader()
+                .getCatalystConfig().getByItem(getCatalystItem());
+    }
+
+    /** Builds human-readable lore lines describing what this catalyst does. */
+    private List<String> buildCatalystActionLines(CatalystData catalyst) {
+        List<String> lines = new ArrayList<>();
+        for (CatalystAction action : catalyst.actions()) {
+            switch (action.type()) {
+                case RESET_COUNT -> lines.add("&7- Reset reforge count to 0");
+                case REDUCE_COUNT -> lines.add("&7- Reduce reforge count by &f" + action.amount());
+                case REMOVE_MODIFIER -> lines.add("&7- Remove all reforge modifiers");
+                case GUARANTEED_GROUP -> lines.add("&7- Guarantee modifier from group(s): &f" + String.join(", ", action.groups()));
+                case GUARANTEED_MODIFIER -> lines.add("&7- Guarantee modifier: &f" + String.join(", ", action.modifierIds()));
+            }
+        }
+        return lines;
     }
 
     private void updateReforgeButton() {
@@ -137,10 +222,12 @@ public class ReforgeGUI extends GUIBuilder {
             if (b != null) this.inventory.setItem(reforgeButtonSlot, b.build());
             return;
         }
-        // Item is valid — compute next reforge cost
+        // Item is valid — compute next reforge cost (base price if catalyst is active)
         int currentAttempt = getCurrentAttempt();
         ConfigLoader cfg = DevReforgePlus.getInstance().getConfigLoader();
-        double nextCost = cfg.getCostAtAttempt(currentAttempt + 1);
+        double nextCost = (getCurrentCatalyst() != null)
+                ? cfg.getBasePrice()
+                : cfg.getCostAtAttempt(currentAttempt + 1);
         String costStr = cfg.isRoundingEnabled()
                 ? String.valueOf((long) nextCost)
                 : String.format("%.2f", nextCost);
@@ -326,15 +413,18 @@ public class ReforgeGUI extends GUIBuilder {
     // -------------------------------------------------------------------------
 
     /**
-     * Attempts to reforge the item currently in the input slot of the player's reforge GUI.
-     * If successful, applies a new modifier to the item and updates its state accordingly.
+     * Attempts to reforge the item in the input slot, applying any active catalyst.
      *
-     * The method enforces a cooldown to prevent rapid consecutive reforging and validates
-     * the input item before proceeding. If no valid item or modifier is found, the reforge action
-     * is canceled.
+     * <p>Catalyst behaviour:</p>
+     * <ul>
+     *   <li>Cost is always {@code Economy.Base} when a catalyst is present.</li>
+     *   <li>{@code REMOVE_MODIFIER}: clears the modifier and tracker, no new modifier applied.</li>
+     *   <li>{@code RESET_COUNT} / {@code REDUCE_COUNT}: adjusts the attempt counter before storing.</li>
+     *   <li>{@code GUARANTEED_GROUP} / {@code GUARANTEED_MODIFIER}: filters the modifier pool.</li>
+     * </ul>
      *
      * @param player The player performing the reforge action.
-     * @return {@code true} if the item was successfully reforged; {@code false} otherwise.
+     * @return {@code true} if the reforge (or modifier removal) succeeded; {@code false} otherwise.
      */
     public boolean reforgeItem(Player player) {
         // Cooldown guard
@@ -353,37 +443,100 @@ public class ReforgeGUI extends GUIBuilder {
         TypeData typeData = DevReforgePlus.getInstance().getConfigLoader().getTypeConfig().getTypeData(typeId);
         if (typeData == null) return false;
 
-        // Economy cost check
+        // Resolve active catalyst (may be null)
+        CatalystData catalyst = getCurrentCatalyst();
+
         ConfigLoader cfg = DevReforgePlus.getInstance().getConfigLoader();
         Economy econ = DevReforgePlus.getEcon();
         int currentAttempt = getCurrentAttempt();
-        double cost = cfg.getCostAtAttempt(currentAttempt + 1);
+
+        // Cost: always base price when using a catalyst, otherwise attempt-scaled
+        double cost = (catalyst != null)
+                ? cfg.getBasePrice()
+                : cfg.getCostAtAttempt(currentAttempt + 1);
         if (econ != null && !econ.has(player, cost)) return false;
 
-        ModifierData nextModifier = ReforgeItemEngine.pickModifier(typeId, typeData);
+        // Snapshot original PDC before any rebuild
+        ItemMeta originalMeta = inputItem.getItemMeta();
+        LiveMMOItem liveItem = new LiveMMOItem(inputItem);
+        ModifierData oldModifier = ReforgeItemEngine.readOldModifier(liveItem);
+
+        // Read item ID for logging
+        String itemId = liveItem.getNBT().getString("MMOITEMS_ITEM_ID");
+        if (itemId == null) itemId = "unknown";
+
+        // ── REMOVE_MODIFIER catalyst: clear modifier, no new one applied ──────
+        if (catalyst != null && catalyst.hasAction(CatalystActionType.REMOVE_MODIFIER)) {
+            if (econ != null) econ.withdrawPlayer(player, cost);
+            if (oldModifier != null) ReforgeItemEngine.clearModifierEffects(liveItem, oldModifier, typeId);
+            else ReforgeItemEngine.clearNamePrefix(liveItem);
+            ReforgeItemEngine.clearTrackerFromItem(liveItem);
+            ItemStack result = liveItem.newBuilder().build();
+            ReforgeItemEngine.restoreUntracked(originalMeta, result);
+            this.inventory.setItem(inputSlot, result);
+            consumeCatalyst();
+            DevReforgePlus.getInstance().getReforgeLogger().logReforge(
+                    player.getUniqueId(), player.getName(), typeId, itemId,
+                    oldModifier != null ? oldModifier.id() : null,
+                    null, currentAttempt, 0, cost,
+                    catalyst.id());
+            updateDisplay();
+            return true;
+        }
+
+        // ── Normal reforge (with optional catalyst constraints) ───────────────
+        ModifierData nextModifier = ReforgeItemEngine.pickModifier(typeId, typeData, catalyst);
         if (nextModifier == null) return false;
 
         // Deduct cost
         if (econ != null) econ.withdrawPlayer(player, cost);
 
-        // Snapshot original PDC so external plugins (e.g. EcoEnchants) survive the rebuild
-        ItemMeta originalMeta = inputItem.getItemMeta();
-
-        LiveMMOItem liveItem = new LiveMMOItem(inputItem);
-        ModifierData oldModifier = ReforgeItemEngine.readOldModifier(liveItem);
-
         if (oldModifier != null) ReforgeItemEngine.clearModifierEffects(liveItem, oldModifier, typeId);
         List<String> appliedStats = ReforgeItemEngine.applyModifierEffects(liveItem, nextModifier, typeId);
-        ReforgeItemEngine.updateTrackerModifier(liveItem, nextModifier.id(), appliedStats);
 
+        // Calculate target attempt after catalyst count modifications
+        int targetAttempt = currentAttempt + 1;
+        if (catalyst != null) {
+            if (catalyst.hasAction(CatalystActionType.RESET_COUNT)) {
+                targetAttempt = 1;
+            } else if (catalyst.hasAction(CatalystActionType.REDUCE_COUNT)) {
+                CatalystAction reduceAction = catalyst.getAction(CatalystActionType.REDUCE_COUNT);
+                int amount = reduceAction != null ? reduceAction.amount() : 0;
+                targetAttempt = Math.max(0, currentAttempt - amount) + 1;
+            }
+        }
+
+        ReforgeItemEngine.updateTrackerModifier(liveItem, nextModifier.id(), appliedStats, targetAttempt);
         ItemStack result = liveItem.newBuilder().build();
-
-        // Restore external data that the MMOItems rebuild discards
         ReforgeItemEngine.restoreUntracked(originalMeta, result);
-
         this.inventory.setItem(inputSlot, result);
+
+        if (catalyst != null) consumeCatalyst();
+
+        DevReforgePlus.getInstance().getReforgeLogger().logReforge(
+                player.getUniqueId(), player.getName(), typeId, itemId,
+                oldModifier != null ? oldModifier.id() : null,
+                nextModifier.id(), currentAttempt, targetAttempt, cost,
+                catalyst != null ? catalyst.id() : null);
+
         updateDisplay();
         return true;
+    }
+
+    /**
+     * Consumes exactly one catalyst item from the catalyst INPUT slot.
+     * Clears the slot if this was the last item in the stack.
+     */
+    private void consumeCatalyst() {
+        ItemStack catalystItem = getCatalystItem();
+        if (catalystItem == null || catalystItem.getType().isAir()) return;
+        if (catalystItem.getAmount() <= 1) {
+            this.inventory.setItem(catalystInputSlot, null);
+        } else {
+            ItemStack remaining = catalystItem.clone();
+            remaining.setAmount(remaining.getAmount() - 1);
+            this.inventory.setItem(catalystInputSlot, remaining);
+        }
     }
 
     // -------------------------------------------------------------------------

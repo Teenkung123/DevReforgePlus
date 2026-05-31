@@ -96,6 +96,32 @@ GUI:
           DisplayName: '&cNo Item'
           Lore:
             - '&7Place an item to see its modifier.'
+      # Slot where the player physically places the catalyst item.
+      # This is a raw input slot — no GUI overlay is ever drawn here.
+      CatalystInputSlot: 26
+      # Display-only slot that shows info about the placed catalyst (never stores real items).
+      CatalystInfo:
+        Slot: 25
+        # Shown when the catalyst input slot is empty
+        ItemEmpty:
+          Material: GRAY_STAINED_GLASS_PANE
+          DisplayName: '&7Catalyst Slot'
+          Lore:
+            - '&8Place a catalyst in slot 26 to enhance your reforge (optional).'
+            - '&8Using a catalyst always costs the base reforge price.'
+        # Shown when a valid catalyst item is placed. Placeholders: <catalyst_display>, <actions>
+        ItemValid:
+          Material: BLAZE_POWDER
+          DisplayName: '<catalyst_display>'
+          Lore:
+            - '<actions>'
+        # Shown when an unrecognized item is placed in the catalyst input slot
+        ItemInvalid:
+          Material: BARRIER
+          DisplayName: '&cNot a Catalyst'
+          Lore:
+            - '&7This item is not a recognized catalyst.'
+            - '&7Check the catalysts/ folder for valid catalysts.'
       ModifierList:
         Slot: 20
         # Shown when the item is valid and modifiers are configured for its type
@@ -146,6 +172,24 @@ GUI:
         ModelData: 0
     Options: {}
 
+Logging:
+  # Log every reforge attempt to a daily CSV file in <plugin-folder>/logs/reforge-YYYY-MM-DD.csv
+  # Columns: timestamp, player_uuid, player_name, item_type, item_id, previous_modifier,
+  #           new_modifier, attempt_before, attempt_after, cost_paid, catalyst_id
+  Enabled: true
+
+AutoUpdater:
+  # Automatically update reforged items when their modifier config changes.
+  # Detection is based on the set of stat IDs tracked on the item vs. the current config.
+  # If you only change stat *values* (not add/remove stats), run /devreforge updateall manually.
+  Enabled: true
+  # Scan the player's full inventory 3 seconds after they join.
+  UpdateOnJoin: true
+  # Update a reforged item when the player picks it up from the ground.
+  UpdateOnPickup: true
+  # Send the player a message when their items are auto-updated.
+  NotifyPlayer: true
+
 Sounds:
   # Format: <sound_name>:<volume>:<pitch>
   # Volume and pitch are optional. If omitted, they default to 1.0
@@ -168,6 +212,12 @@ Messages:
   UnknownModifier: '&cUnknown modifier: &f<modifier_id>'
   NotMMOItem: '&cThis item is not an MMOItem.'
   ReforgeSuccess: '&aApplied reforge modifier &f<modifier_id> &ato the item.'
-  UnknownSubCommand: '&cUnknown sub-command. Use: &freload&c, &fremove&c, &freset&c, &freforge <id>'
+  UnknownSubCommand: '&cUnknown sub-command. Use: &freload&c, &fremove&c, &freset&c, &freforge <id>&c, &fupdateall&c, &fupdateitem'
+  AutoUpdaterUpdated: '<green><count> reforged item(s) updated to match latest config.'
+  UpdateAllSuccess: '&aUpdated &f<count>&a reforged item(s) across &f<players>&a online player(s).'
+  UpdateItemSuccess: '&aItem updated to match current modifier config.'
+  UpdateItemNoChange: '&eItem is already up to date or has no reforge modifier.'
   UnknownReforge: '&cUnknown Reforge: &f<reforge_id>'
   NotEnoughMoney: '&cYou cannot afford this reforge. Cost: &e<cost>'
+  CatalystConsumed: '&7Catalyst consumed.'
+  CatalystNotAvailable: '&cCatalyst item is no longer available.'

@@ -1,0 +1,21 @@
+id: example_catalyst
+displayName: "<white>Example Catalyst"
+
+# Detection: uses MMOItems type + item ID to identify the catalyst item.
+Detection:
+  MMOItemType: CONSUMABLE
+  MMOItemId: example_catalyst_item
+
+# Actions applied when this catalyst is used during a reforge.
+# Multiple actions can be combined. They are applied in order.
+Actions:
+  - Type: RESET_COUNT
+  # - Type: REDUCE_COUNT
+  #   Amount: 3           # Reduce reforge count by 3 (minimum 0)
+  # - Type: REMOVE_MODIFIER   # Remove existing modifier from item (no new modifier applied)
+  # - Type: GUARANTEED_GROUP
+  #   Groups:
+  #     - legendary       # Must match the 'group:' field in a modifier's yml file
+  # - Type: GUARANTEED_MODIFIER
+  #   Modifiers:
+  #     - savage          # Must be a modifier ID configured for the item's type

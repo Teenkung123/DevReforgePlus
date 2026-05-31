@@ -1,0 +1,12 @@
+id: savage
+displayName: <red>Savage
+stats:
+  ATTACK_DAMAGE:
+    Type: FLAT
+    Value: 15.0
+  CRITICAL_STRIKE_CHANCE:
+    Type: SCALE
+    Value: 0.1
+  CRITICAL_STRIKE_POWER:
+    Type: FLAT
+    Value: 20.0

@@ -8,7 +8,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The {@code ModifierConfig} class is responsible for managing and loading modifier configurations
@@ -94,13 +98,36 @@ public class ModifierConfig {
         }
 
         String display = config.getString("displayName", id);
+        List<String> groups = loadGroups(config);
         Map<String, ReforgeStatData> stats = loadStatMap(config, file.getName());
         if (stats == null) {
             plugin.getLogger().warning("Modifier file " + file.getName() + " is missing a 'stats' section. Skipping.");
             return;
         }
 
-        modifiers.put(id, new ModifierData(id, display, stats));
+        modifiers.put(id, new ModifierData(id, display, stats, groups));
+    }
+
+    /**
+     * Reads the {@code groups} / {@code group} field from the modifier config.
+     * Supports both a single string ({@code group: rare}) and a list
+     * ({@code groups: [rare, epic]}). Values are lower-cased for consistent matching.
+     * Defaults to {@code ["none"]} if neither field is present.
+     */
+    private List<String> loadGroups(YamlConfiguration config) {
+        // Prefer explicit list under "groups:"
+        if (config.isList("groups")) {
+            List<String> raw = config.getStringList("groups");
+            List<String> result = raw.stream()
+                    .map(s -> s.toLowerCase().trim())
+                    .filter(s -> !s.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!result.isEmpty()) return result;
+        }
+        // Fall back to single-value "group:" or "groups:" as a scalar
+        String single = config.getString("groups", config.getString("group", "none"));
+        return List.of(single.toLowerCase().trim());
     }
 
     /**
@@ -173,6 +200,32 @@ public class ModifierConfig {
      **/
     public Map<String, ModifierData> getModifiers() {
         return Collections.unmodifiableMap(modifiers);
+    }
+
+    /**
+     * Returns all modifiers that belong to the given group (case-insensitive).
+     * A modifier can belong to multiple groups.
+     *
+     * @param group the group/tier name to filter by
+     * @return list of matching modifiers (may be empty)
+     */
+    public List<ModifierData> getModifiersByGroup(String group) {
+        return modifiers.values().stream()
+                .filter(m -> m.hasGroup(group))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns all distinct group names present across loaded modifiers.
+     *
+     * @return set of group names
+     */
+    public Set<String> getAllGroups() {
+        Set<String> groups = new HashSet<>();
+        for (ModifierData m : modifiers.values()) {
+            groups.addAll(m.groups());
+        }
+        return Collections.unmodifiableSet(groups);
     }
 }
 

@@ -1,13 +1,18 @@
 package com.Teenkung.devReforgePlus.GUI.ReforgeGUI;
 
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystAction;
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystActionType;
+import com.Teenkung.devReforgePlus.Config.CatalystConfig.CatalystData;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.ModifierData;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.ReforgeStatData;
 import com.Teenkung.devReforgePlus.Config.ModifierConfig.ReforgeStatType;
 import com.Teenkung.devReforgePlus.Config.TypeConfig.TypeData;
 import com.Teenkung.devReforgePlus.DevReforgePlus;
+import com.Teenkung.devReforgePlus.Utils.ReforgeUpdater;
 import com.Teenkung.devReforgePlus.Utils.StatResolver;
 import com.Teenkung.devReforgePlus.Utils.TrackerPayload;
 import com.Teenkung.devReforgePlus.Utils.TrackerUtils;
+import org.jetbrains.annotations.Nullable;
 import net.Indyuce.mmoitems.ItemStats;
 import net.Indyuce.mmoitems.api.item.mmoitem.LiveMMOItem;
 import net.Indyuce.mmoitems.stat.data.DoubleData;
@@ -40,25 +45,38 @@ public class ReforgeItemEngine {
 
     /**
      * Picks a modifier for the given type using weighted random selection.
+     * If a catalyst is provided, its {@code GUARANTEED_GROUP} or {@code GUARANTEED_MODIFIER}
+     * actions are applied as filters on the candidate pool before selection.
+     * Falls back to the full pool if the filtered set is empty.
      *
-     * @return the selected {@link ModifierData}, or {@code null} if no valid
-     *         candidates exist
+     * @param catalyst optional catalyst being used (may be {@code null})
+     * @return the selected {@link ModifierData}, or {@code null} if no valid candidates exist
      */
-    public static ModifierData pickModifier(String typeId, TypeData typeData) {
-        List<Map.Entry<String, Double>> candidates = new ArrayList<>();
-        double totalWeight = 0D;
+    public static ModifierData pickModifier(String typeId, TypeData typeData, @Nullable CatalystData catalyst) {
+        List<Map.Entry<String, Double>> allCandidates = buildCandidates(typeId, typeData);
+        if (allCandidates.isEmpty()) return null;
 
+        List<Map.Entry<String, Double>> candidates = applyCatalystFilter(allCandidates, catalyst, typeId);
+        // Fall back to full pool if filtering removed everything
+        if (candidates.isEmpty()) candidates = allCandidates;
+
+        return pickWeightedRandom(candidates);
+    }
+
+    /**
+     * Builds all valid (positive-weight, known) modifier candidates for this type.
+     */
+    private static List<Map.Entry<String, Double>> buildCandidates(String typeId, TypeData typeData) {
+        List<Map.Entry<String, Double>> candidates = new ArrayList<>();
         for (Map.Entry<String, Double> entry : typeData.reforgeWeights().entrySet()) {
             String modifierId = entry.getKey();
             double weight = entry.getValue() == null ? 0D : entry.getValue();
-
             if (weight < 0) {
                 DevReforgePlus.getInstance().getLogger().warning(
                         "Skipping modifier with negative weight: type='" + typeId + "', modifier='" + modifierId + "', weight=" + weight);
                 continue;
             }
             if (weight == 0) continue;
-
             ModifierData modifier = DevReforgePlus.getInstance().getConfigLoader()
                     .getModifierConfig().getModifier(modifierId);
             if (modifier == null) {
@@ -66,12 +84,63 @@ public class ReforgeItemEngine {
                         "Unknown modifier in type config: type='" + typeId + "', modifier='" + modifierId + "'. Skipping.");
                 continue;
             }
-
             candidates.add(entry);
-            totalWeight += weight;
+        }
+        return candidates;
+    }
+
+    /**
+     * Applies GUARANTEED_GROUP and GUARANTEED_MODIFIER catalyst filters to the candidate list.
+     * Returns the original list unchanged if no relevant actions are present.
+     */
+    private static List<Map.Entry<String, Double>> applyCatalystFilter(
+            List<Map.Entry<String, Double>> candidates, @Nullable CatalystData catalyst, String typeId) {
+        if (catalyst == null) return candidates;
+
+        List<Map.Entry<String, Double>> filtered = new ArrayList<>(candidates);
+
+        CatalystAction groupAction = catalyst.getAction(CatalystActionType.GUARANTEED_GROUP);
+        if (groupAction != null && !groupAction.groups().isEmpty()) {
+            List<Map.Entry<String, Double>> groupFiltered = filtered.stream()
+                    .filter(e -> {
+                        ModifierData mod = DevReforgePlus.getInstance().getConfigLoader()
+                                .getModifierConfig().getModifier(e.getKey());
+                        return mod != null && groupAction.groups().stream()
+                                .anyMatch(mod::hasGroup);
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            if (!groupFiltered.isEmpty()) {
+                filtered = groupFiltered;
+            } else {
+                DevReforgePlus.getInstance().getLogger().warning(
+                        "GUARANTEED_GROUP catalyst found no modifiers in groups " + groupAction.groups()
+                        + " for type '" + typeId + "'. Falling back to full pool.");
+                return java.util.Collections.emptyList();
+            }
         }
 
-        if (totalWeight <= 0 || candidates.isEmpty()) return null;
+        CatalystAction modAction = catalyst.getAction(CatalystActionType.GUARANTEED_MODIFIER);
+        if (modAction != null && !modAction.modifierIds().isEmpty()) {
+            List<Map.Entry<String, Double>> modFiltered = filtered.stream()
+                    .filter(e -> modAction.modifierIds().contains(e.getKey()))
+                    .collect(java.util.stream.Collectors.toList());
+            if (!modFiltered.isEmpty()) {
+                filtered = modFiltered;
+            } else {
+                DevReforgePlus.getInstance().getLogger().warning(
+                        "GUARANTEED_MODIFIER catalyst found no matching modifiers " + modAction.modifierIds()
+                        + " in the type '" + typeId + "' pool. Falling back.");
+                return java.util.Collections.emptyList();
+            }
+        }
+
+        return filtered;
+    }
+
+    /** Performs weighted random selection from the candidate list. */
+    private static @Nullable ModifierData pickWeightedRandom(List<Map.Entry<String, Double>> candidates) {
+        double totalWeight = candidates.stream().mapToDouble(Map.Entry::getValue).sum();
+        if (totalWeight <= 0) return null;
 
         double roll = new Random().nextDouble() * totalWeight;
         double cumulative = 0D;
@@ -82,8 +151,7 @@ public class ReforgeItemEngine {
                         .getModifierConfig().getModifier(entry.getKey());
             }
         }
-
-        // Fallback to last candidate (handles floating-point edge cases)
+        // Fallback to last candidate (floating-point edge case)
         return DevReforgePlus.getInstance().getConfigLoader()
                 .getModifierConfig().getModifier(candidates.get(candidates.size() - 1).getKey());
     }
@@ -188,9 +256,8 @@ public class ReforgeItemEngine {
     // -------------------------------------------------------------------------
 
     /**
-     * Reads the existing tracker from NBT, increments the attempt counter,
-     * and writes the new tracker back into the live item's data so that
-     * {@code whenApplied()} serializes it during {@code build()}.
+     * Reads the existing tracker from NBT, increments the attempt counter by 1,
+     * and writes the new tracker back. Use this for normal (non-catalyst) reforges.
      *
      * @param appliedStats List of stat IDs that were actually applied to the item
      */
@@ -205,10 +272,36 @@ public class ReforgeItemEngine {
         } catch (Exception ignored) {
             // decode failure → restart count at 1
         }
+        updateTrackerModifier(liveItem, modifierId, appliedStats, attempts);
+    }
+
+    /**
+     * Writes the tracker with a specific {@code targetAttempt} value.
+     * Used by catalyst actions that override the attempt count (RESET_COUNT, REDUCE_COUNT).
+     *
+     * @param appliedStats  List of stat IDs actually applied to the item
+     * @param targetAttempt The exact attempt number to store (1 = first reforge)
+     */
+    public static void updateTrackerModifier(LiveMMOItem liveItem, String modifierId,
+                                             List<String> appliedStats, int targetAttempt) {
+        ModifierData modifier = DevReforgePlus.getInstance().getConfigLoader()
+                .getModifierConfig().getModifier(modifierId);
+        String hash = modifier != null ? ReforgeUpdater.computeConfigHash(modifier) : "";
 
         liveItem.setData(
                 DevReforgePlus.getInstance().getTrackerStat(),
-                new StringData(TrackerUtils.encode(modifierId, attempts, appliedStats))
+                new StringData(TrackerUtils.encode(modifierId, targetAttempt, appliedStats, hash))
+        );
+    }
+
+    /**
+     * Clears the reforge tracker from the live item (sets it to an empty string),
+     * effectively marking the item as never-reforged. Used by the REMOVE_MODIFIER catalyst action.
+     */
+    public static void clearTrackerFromItem(LiveMMOItem liveItem) {
+        liveItem.setData(
+                DevReforgePlus.getInstance().getTrackerStat(),
+                new StringData("")
         );
     }
 

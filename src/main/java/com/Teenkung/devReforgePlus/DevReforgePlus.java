@@ -3,9 +3,12 @@ package com.Teenkung.devReforgePlus;
 import com.Teenkung.devReforgePlus.Command.DevReforgeCommandExecutor;
 import com.Teenkung.devReforgePlus.Config.ConfigLoader;
 import com.Teenkung.devReforgePlus.GUI.ReforgeGUI.ReforgeGUI;
+import com.Teenkung.devReforgePlus.GUI.ReforgeGUI.ReforgeGUIListener;
 import com.Teenkung.devReforgePlus.GUI.ReforgeGUI.ReforgeGUIManager;
 import com.Teenkung.devReforgePlus.Listener.GemstoneCompatListener;
+import com.Teenkung.devReforgePlus.Listener.ReforgeUpdateListener;
 import com.Teenkung.devReforgePlus.Stats.TrackerStat;
+import com.Teenkung.devReforgePlus.Utils.ReforgeLogger;
 import lombok.Getter;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -29,6 +32,8 @@ public final class DevReforgePlus extends JavaPlugin {
     @Getter
     private DevReforgeCommandExecutor devReforgeCommandExecutor;
     @Getter
+    private ReforgeLogger reforgeLogger;
+    @Getter
     private static Economy econ;
 
     @Override
@@ -36,11 +41,14 @@ public final class DevReforgePlus extends JavaPlugin {
         instance = this;
         setupEconomy();
         configLoader = new ConfigLoader(this);
+        reforgeLogger = new ReforgeLogger(this);
         trackerStat = new TrackerStat();
         reforgeGUI = new ReforgeGUI();
         reforgeGUI.loadReforgeMenu();
         devReforgeCommandExecutor = new DevReforgeCommandExecutor(this);
+        getServer().getPluginManager().registerEvents(new ReforgeGUIListener(), this);
         getServer().getPluginManager().registerEvents(new GemstoneCompatListener(), this);
+        getServer().getPluginManager().registerEvents(new ReforgeUpdateListener(), this);
     }
 
     @Override
